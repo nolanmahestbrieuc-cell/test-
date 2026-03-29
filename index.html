@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Borasurfar – Glissez vers l'aventure</title>
   <link rel="stylesheet" href="style.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&family=Nunito:wght@900&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet" />
 </head>
 <body>
 
@@ -13,27 +13,37 @@
   <header class="header" id="top">
     <nav class="nav container">
       <a href="#top" class="logo">
-        <svg class="logo-img" viewBox="0 0 308 58" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <svg class="logo-img" viewBox="0 0 300 62" fill="none" xmlns="http://www.w3.org/2000/svg">
           <defs>
-            <linearGradient id="logo-top" x1="0" y1="0" x2="0" y2="1">
+            <linearGradient id="lg-front" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stop-color="#5eead4"/>
+              <stop offset="55%" stop-color="#2dd4bf"/>
               <stop offset="100%" stop-color="#14b8a6"/>
             </linearGradient>
           </defs>
-          <!-- Meeple 3D extrusion layer -->
-          <g transform="translate(3,4)" fill="#0a7a6e">
-            <circle cx="20" cy="10" r="8"/>
-            <path d="M11 22 C6 24 5 31 10 33 C7 39 8 50 13 52 L27 52 C32 50 33 39 30 33 C35 31 34 24 29 22 C26 19 14 19 11 22Z"/>
+          <!-- === MEEPLE === -->
+          <!-- depth layer 2 (darkest) -->
+          <g transform="translate(5,6)" fill="#065c50">
+            <circle cx="20" cy="11" r="8.5"/>
+            <path d="M10 22 C4 25 4 32 9 34 C7 40 8 51 12 53 L28 53 C32 51 33 40 31 34 C36 32 36 25 30 22 C27 20 13 20 10 22Z"/>
           </g>
-          <!-- Meeple main shape -->
-          <g fill="url(#logo-top)">
-            <circle cx="20" cy="10" r="8"/>
-            <path d="M11 22 C6 24 5 31 10 33 C7 39 8 50 13 52 L27 52 C32 50 33 39 30 33 C35 31 34 24 29 22 C26 19 14 19 11 22Z"/>
+          <!-- depth layer 1 -->
+          <g transform="translate(2.5,3)" fill="#0a7a6b">
+            <circle cx="20" cy="11" r="8.5"/>
+            <path d="M10 22 C4 25 4 32 9 34 C7 40 8 51 12 53 L28 53 C32 51 33 40 31 34 C36 32 36 25 30 22 C27 20 13 20 10 22Z"/>
           </g>
-          <!-- Text 3D extrusion layer -->
-          <text x="51" y="47" font-family="Montserrat,Arial Black,sans-serif" font-weight="900" font-size="34" fill="#0a7a6e" transform="translate(3,4)">borasurfar</text>
-          <!-- Text main layer -->
-          <text x="51" y="47" font-family="Montserrat,Arial Black,sans-serif" font-weight="900" font-size="34" fill="url(#logo-top)">borasurfar</text>
+          <!-- front face -->
+          <g fill="url(#lg-front)">
+            <circle cx="20" cy="11" r="8.5"/>
+            <path d="M10 22 C4 25 4 32 9 34 C7 40 8 51 12 53 L28 53 C32 51 33 40 31 34 C36 32 36 25 30 22 C27 20 13 20 10 22Z"/>
+          </g>
+          <!-- === TEXT === -->
+          <!-- depth layer 2 (darkest) -->
+          <text x="48" y="48" font-family="Nunito,Arial Rounded MT Bold,sans-serif" font-weight="900" font-size="35" fill="#065c50" transform="translate(5,6)">borasurfar</text>
+          <!-- depth layer 1 -->
+          <text x="48" y="48" font-family="Nunito,Arial Rounded MT Bold,sans-serif" font-weight="900" font-size="35" fill="#0a7a6b" transform="translate(2.5,3)">borasurfar</text>
+          <!-- front face -->
+          <text x="48" y="48" font-family="Nunito,Arial Rounded MT Bold,sans-serif" font-weight="900" font-size="35" fill="url(#lg-front)">borasurfar</text>
         </svg>
       </a>
       <ul class="nav-links">
@@ -327,21 +337,30 @@
   <footer class="footer">
     <div class="container footer-grid">
       <div class="footer-brand">
-        <svg class="footer-logo" viewBox="0 0 308 58" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <!-- Meeple 3D extrusion layer -->
-          <g transform="translate(3,4)" fill="rgba(255,255,255,.25)">
-            <circle cx="20" cy="10" r="8"/>
-            <path d="M11 22 C6 24 5 31 10 33 C7 39 8 50 13 52 L27 52 C32 50 33 39 30 33 C35 31 34 24 29 22 C26 19 14 19 11 22Z"/>
+        <svg class="footer-logo" viewBox="0 0 300 62" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- === MEEPLE === -->
+          <!-- depth layer 2 -->
+          <g transform="translate(5,6)" fill="rgba(0,0,0,.35)">
+            <circle cx="20" cy="11" r="8.5"/>
+            <path d="M10 22 C4 25 4 32 9 34 C7 40 8 51 12 53 L28 53 C32 51 33 40 31 34 C36 32 36 25 30 22 C27 20 13 20 10 22Z"/>
           </g>
-          <!-- Meeple main shape -->
-          <g fill="rgba(255,255,255,.9)">
-            <circle cx="20" cy="10" r="8"/>
-            <path d="M11 22 C6 24 5 31 10 33 C7 39 8 50 13 52 L27 52 C32 50 33 39 30 33 C35 31 34 24 29 22 C26 19 14 19 11 22Z"/>
+          <!-- depth layer 1 -->
+          <g transform="translate(2.5,3)" fill="rgba(0,0,0,.2)">
+            <circle cx="20" cy="11" r="8.5"/>
+            <path d="M10 22 C4 25 4 32 9 34 C7 40 8 51 12 53 L28 53 C32 51 33 40 31 34 C36 32 36 25 30 22 C27 20 13 20 10 22Z"/>
           </g>
-          <!-- Text 3D extrusion layer -->
-          <text x="51" y="47" font-family="Montserrat,Arial Black,sans-serif" font-weight="900" font-size="34" fill="rgba(255,255,255,.25)" transform="translate(3,4)">borasurfar</text>
-          <!-- Text main layer -->
-          <text x="51" y="47" font-family="Montserrat,Arial Black,sans-serif" font-weight="900" font-size="34" fill="white">borasurfar</text>
+          <!-- front face -->
+          <g fill="rgba(255,255,255,.92)">
+            <circle cx="20" cy="11" r="8.5"/>
+            <path d="M10 22 C4 25 4 32 9 34 C7 40 8 51 12 53 L28 53 C32 51 33 40 31 34 C36 32 36 25 30 22 C27 20 13 20 10 22Z"/>
+          </g>
+          <!-- === TEXT === -->
+          <!-- depth layer 2 -->
+          <text x="48" y="48" font-family="Nunito,Arial Rounded MT Bold,sans-serif" font-weight="900" font-size="35" fill="rgba(0,0,0,.35)" transform="translate(5,6)">borasurfar</text>
+          <!-- depth layer 1 -->
+          <text x="48" y="48" font-family="Nunito,Arial Rounded MT Bold,sans-serif" font-weight="900" font-size="35" fill="rgba(0,0,0,.2)" transform="translate(2.5,3)">borasurfar</text>
+          <!-- front face -->
+          <text x="48" y="48" font-family="Nunito,Arial Rounded MT Bold,sans-serif" font-weight="900" font-size="35" fill="white">borasurfar</text>
         </svg>
         <p>L'école de surf qui vous emmène au-delà des vagues.</p>
         <div class="social-links">
