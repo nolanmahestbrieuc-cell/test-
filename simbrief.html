@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SimBrief Parser – Extraction OFP</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0b0f1a;
+      --bg2:       #111827;
+      --bg3:       #1e2a3a;
+      --border:    #2d3f55;
+      --accent:    #3b82f6;
+      --accent2:   #60a5fa;
+      --green:     #22c55e;
+      --yellow:    #eab308;
+      --red:       #ef4444;
+      --orange:    #f97316;
+      --text:      #e2e8f0;
+      --text-mute: #94a3b8;
+      --radius:    10px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    /* ── HEADER ── */
+    header {
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      padding: 18px 32px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    header svg { flex-shrink: 0; }
+    header h1 { font-size: 1.4rem; font-weight: 700; color: var(--text); }
+    header p  { font-size: .82rem; color: var(--text-mute); }
+
+    /* ── LAYOUT ── */
+    main {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 32px 24px 64px;
+    }
+
+    /* ── INPUT ZONE ── */
+    .input-section { margin-bottom: 32px; }
+    .input-label {
+      font-size: .82rem;
+      font-weight: 600;
+      color: var(--text-mute);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-bottom: 8px;
+      display: block;
+    }
+    .textarea-wrap { position: relative; }
+    textarea#ofp-input {
+      width: 100%;
+      height: 200px;
+      background: var(--bg2);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-family: 'Courier New', monospace;
+      font-size: .82rem;
+      padding: 14px 16px;
+      resize: vertical;
+      outline: none;
+      transition: border-color .2s;
+    }
+    textarea#ofp-input:focus { border-color: var(--accent); }
+    textarea#ofp-input::placeholder { color: var(--text-mute); }
+
+    .controls {
+      display: flex;
+      gap: 10px;
+      margin-top: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    button {
+      padding: 10px 22px;
+      border-radius: 8px;
+      border: none;
+      font-size: .88rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity .15s, transform .1s;
+    }
+    button:hover { opacity: .88; transform: translateY(-1px); }
+    button:active { transform: translateY(0); }
+
+    .btn-parse  { background: var(--accent);  color: #fff; }
+    .btn-clear  { background: var(--bg3);     color: var(--text-mute); border: 1px solid var(--border); }
+    .btn-sample { background: var(--bg3);     color: var(--accent2);   border: 1px solid var(--border); }
+
+    .info-count {
+      margin-left: auto;
+      font-size: .82rem;
+      color: var(--text-mute);
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 6px 14px;
+    }
+    .info-count span { color: var(--accent2); font-weight: 700; }
+
+    /* ── RESULTS HEADER ── */
+    .results-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .results-header h2 { font-size: 1.05rem; font-weight: 700; color: var(--text-mute); }
+    .results-header .badge {
+      background: var(--accent);
+      color: #fff;
+      font-size: .72rem;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 50px;
+      margin-left: 10px;
+    }
+
+    /* ── FLIGHT CARDS GRID ── */
+    .flights-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+      gap: 20px;
+    }
+
+    .flight-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+
+    .card-header {
+      background: var(--bg3);
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+    }
+    .card-route {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 1.05rem;
+    }
+    .card-route .icao {
+      background: var(--accent);
+      color: #fff;
+      padding: 3px 10px;
+      border-radius: 6px;
+      font-size: .88rem;
+      letter-spacing: .04em;
+    }
+    .card-route .arrow { color: var(--text-mute); font-size: 1.1rem; }
+    .card-meta {
+      font-size: .76rem;
+      color: var(--text-mute);
+      text-align: right;
+    }
+    .card-meta .flight-num { color: var(--accent2); font-weight: 700; font-size: .82rem; }
+
+    .card-body { padding: 18px 20px; }
+
+    /* ── SECTIONS WITHIN CARD ── */
+    .data-section { margin-bottom: 18px; }
+    .data-section:last-child { margin-bottom: 0; }
+    .data-section-title {
+      font-size: .7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      color: var(--text-mute);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .data-section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .data-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 10px;
+    }
+
+    .data-item {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+    }
+    .data-item .label {
+      font-size: .68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--text-mute);
+      margin-bottom: 4px;
+    }
+    .data-item .value {
+      font-size: 1.05rem;
+      font-weight: 700;
+      font-family: 'Courier New', monospace;
+      color: var(--text);
+    }
+    .data-item .unit {
+      font-size: .68rem;
+      color: var(--text-mute);
+      margin-left: 3px;
+    }
+
+    /* Colour coding */
+    .data-item.fuel  .value { color: #fbbf24; }
+    .data-item.vspd  .value { color: #34d399; }
+    .data-item.weight .value { color: #a78bfa; }
+    .data-item.perf  .value { color: var(--accent2); }
+    .data-item.missing .value { color: var(--border); font-size: .78rem; font-weight: 500; }
+
+    /* ── EMPTY / PLACEHOLDER ── */
+    .empty-state {
+      text-align: center;
+      padding: 80px 20px;
+      color: var(--text-mute);
+    }
+    .empty-state svg { margin: 0 auto 20px; opacity: .3; }
+    .empty-state h3 { font-size: 1.1rem; margin-bottom: 8px; }
+    .empty-state p  { font-size: .88rem; }
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed;
+      bottom: 24px; right: 24px;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: .85rem;
+      font-weight: 600;
+      box-shadow: 0 8px 32px rgba(0,0,0,.4);
+      transform: translateY(80px);
+      opacity: 0;
+      transition: transform .3s, opacity .3s;
+      z-index: 999;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast.ok   { border-color: var(--green); color: var(--green); }
+    .toast.err  { border-color: var(--red);   color: var(--red); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 640px) {
+      header { padding: 14px 16px; }
+      main   { padding: 20px 14px 48px; }
+      .flights-grid { grid-template-columns: 1fr; }
+      .data-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header>
+    <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="36" height="36" rx="8" fill="#1e3a5f"/>
+      <path d="M6 22 L14 10 L18 14 L26 8 L30 14 L18 20 L20 26 L16 26 L14 20 Z" fill="#3b82f6" opacity=".9"/>
+      <circle cx="26" cy="8" r="3" fill="#60a5fa"/>
+    </svg>
+    <div>
+      <h1>SimBrief OFP Parser</h1>
+      <p>Collez vos feuilles SimBrief — extraction automatique des valeurs clés</p>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- INPUT -->
+    <div class="input-section">
+      <label class="input-label" for="ofp-input">Collez une ou plusieurs feuilles OFP SimBrief</label>
+      <div class="textarea-wrap">
+        <textarea id="ofp-input" placeholder="Collez ici le texte de vos feuilles OFP SimBrief (plusieurs feuilles séparées par --- ou ZCZC sont supportées)…"></textarea>
+      </div>
+      <div class="controls">
+        <button class="btn-parse"  onclick="parseAll()">Analyser</button>
+        <button class="btn-sample" onclick="loadSample()">Exemple</button>
+        <button class="btn-clear"  onclick="clearAll()">Effacer</button>
+        <div class="info-count" id="info-count"><span id="count-val">0</span> feuille(s) détectée(s)</div>
+      </div>
+    </div>
+
+    <!-- RESULTS -->
+    <div id="results-area">
+      <div class="empty-state">
+        <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+          <rect x="12" y="8" width="40" height="48" rx="4" stroke="#64748b" stroke-width="2" fill="none"/>
+          <line x1="20" y1="20" x2="44" y2="20" stroke="#64748b" stroke-width="2"/>
+          <line x1="20" y1="28" x2="44" y2="28" stroke="#64748b" stroke-width="2"/>
+          <line x1="20" y1="36" x2="36" y2="36" stroke="#64748b" stroke-width="2"/>
+        </svg>
+        <h3>Aucune feuille analysée</h3>
+        <p>Collez vos OFP SimBrief ci-dessus et cliquez sur <strong>Analyser</strong>.</p>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+  // ─────────────────────────────────────────────
+  //  SAMPLE DATA (realistic SimBrief OFP format)
+  // ─────────────────────────────────────────────
+  const SAMPLE = `
+ACARS OUT ................ 0855Z
+ACARS OFF ................ 0900Z
+
+OFP AFR1234/01 LFPG/EGLL
+AIRCRAFT TYPE: A320
+REG: F-GKXT   CI: 30
+
+LFPG  CDG  PARIS  ->  EGLL  LHR  LONDON
+
+FLIGHT PLAN
+
+FUEL SUMMARY
+TRIP FUEL        3200 KG
+ALTN FUEL         820 KG
+FINAL RESERVE     680 KG
+CONTINGENCY       160 KG
+EXTRA FUEL          0 KG
+TAXI              230 KG
+BLOCK FUEL       5090 KG
+
+WEIGHTS
+ZFW             60400 KG
+EZFW            62000 KG
+TOW             65490 KG
+LDW             62290 KG
+
+TAKEOFF PERFORMANCE   RWY 27L
+V1     138 KT
+VR     143 KT
+V2     148 KT
+FLEX   52 DEG
+TRIM    0.0 UP
+FLAPS  1+F
+
+CRUISE FL320 / M.78
+
+---
+
+OFP BAW456/02 EGLL/KJFK
+AIRCRAFT TYPE: B777
+REG: G-VIIA   CI: 80
+
+EGLL  LHR  LONDON  ->  KJFK  NEW YORK
+
+FUEL SUMMARY
+TRIP FUEL       55400 KG
+ALTN FUEL        3200 KG
+FINAL RESERVE    2800 KG
+CONTINGENCY      2770 KG
+EXTRA FUEL       1000 KG
+TAXI              400 KG
+BLOCK FUEL      65570 KG
+
+WEIGHTS
+ZFW            226300 KG
+EZFW           228000 KG
+TOW            291870 KG
+LDW            236170 KG
+
+TAKEOFF PERFORMANCE   RWY 09R
+V1     168 KT
+VR     173 KT
+V2     178 KT
+FLEX   OFF (TOGA)
+TRIM    1.5 DN
+FLAPS  5
+
+CRUISE FL380 / M.84
+
+---
+
+OFP EZY789/03 LFMN/LEMD
+AIRCRAFT TYPE: A320
+REG: G-EZAB   CI: 50
+
+LFMN  NCE  NICE  ->  LEMD  MAD  MADRID
+
+FUEL SUMMARY
+TRIP FUEL        4100 KG
+ALTN FUEL         900 KG
+FINAL RESERVE     680 KG
+CONTINGENCY       205 KG
+EXTRA FUEL          0 KG
+TAXI              230 KG
+BLOCK FUEL       6115 KG
+
+WEIGHTS
+ZFW             63200 KG
+EZFW            65000 KG
+TOW             69315 KG
+LDW             65215 KG
+
+TAKEOFF PERFORMANCE   RWY 04R
+V1     140 KT
+VR     145 KT
+V2     150 KT
+FLEX   48 DEG
+TRIM    0.5 UP
+FLAPS  2
+
+CRUISE FL350 / M.79
+`.trim();
+
+  // ─────────────────────────────────────────────
+  //  SHEET SPLITTER
+  // ─────────────────────────────────────────────
+  function splitSheets(raw) {
+    // Split on common SimBrief separators: ---, ZCZC, or a new OFP header
+    const parts = raw.split(/(?=\bOFP\s+\w+\/\d+)|---+|\bZCZC\b/i)
+      .map(s => s.trim())
+      .filter(s => s.length > 40);
+    return parts.length ? parts : [raw.trim()];
+  }
+
+  // ─────────────────────────────────────────────
+  //  PARSE ONE SHEET
+  // ─────────────────────────────────────────────
+  function parseSheet(text) {
+    const find = (patterns) => {
+      for (const re of patterns) {
+        const m = text.match(re);
+        if (m) return m[1].trim();
+      }
+      return null;
+    };
+
+    // ── Route ──
+    const dep = find([
+      /^OFP\s+\S+\s+(\w{4})\//im,
+      /\b([A-Z]{4})\s+\S+\s+\S+\s*->/im,
+      /DEP(?:ARTURE)?[:\s]+([A-Z]{4})/im,
+    ]);
+    const arr = find([
+      /^OFP\s+\S+\s+\w{4}\/(\w{4})/im,
+      /->\s+(\w{4})/im,
+      /DEST(?:INATION)?[:\s]+([A-Z]{4})/im,
+    ]);
+
+    // ── Flight number ──
+    const flightNum = find([
+      /^OFP\s+(\S+)\s/im,
+      /FLT(?:NR|NO)?[:\s]+(\S+)/im,
+    ]);
+
+    // ── Aircraft ──
+    const acType = find([
+      /AIRCRAFT\s+TYPE[:\s]+(\S+)/im,
+      /AC\s*TYPE[:\s]+(\S+)/im,
+      /\bTYPE\b[:\s]+([A-Z][0-9A-Z]{2,5})/im,
+    ]);
+    const reg = find([
+      /REG(?:ISTRATION)?[:\s]+([A-Z0-9\-]+)/im,
+    ]);
+
+    // ── Fuel (kg or lbs) ──
+    const fuelVal = (patterns) => {
+      const v = find(patterns);
+      if (!v) return null;
+      const num = v.replace(/[^\d]/g, '');
+      return num ? parseInt(num, 10).toLocaleString('fr-FR') : null;
+    };
+
+    const block   = fuelVal([/BLOCK\s+FUEL[\s:]+([0-9][0-9 ]+)/im, /BLOCKFUEL[\s:]+([0-9][0-9 ]+)/im]);
+    const trip    = fuelVal([/TRIP\s+FUEL[\s:]+([0-9][0-9 ]+)/im,  /TRIPFUEL[\s:]+([0-9][0-9 ]+)/im]);
+    const altn    = fuelVal([/ALTN\s+FUEL[\s:]+([0-9][0-9 ]+)/im,  /ALTERNATE\s+FUEL[\s:]+([0-9][0-9 ]+)/im]);
+    const resrv   = fuelVal([/FINAL\s+RESERVE[\s:]+([0-9][0-9 ]+)/im, /RESERVE[\s:]+([0-9][0-9 ]+)/im]);
+    const cont    = fuelVal([/CONTINGENCY[\s:]+([0-9][0-9 ]+)/im]);
+    const taxi    = fuelVal([/TAXI[\s:]+([0-9][0-9 ]+)/im]);
+    const extra   = fuelVal([/EXTRA\s+FUEL[\s:]+([0-9][0-9 ]+)/im]);
+
+    // ── V-speeds ──
+    const vspd = (patterns) => {
+      const v = find(patterns);
+      return v ? v.replace(/[^\d]/g, '').slice(0, 4) : null;
+    };
+
+    // Try combined V1/VR/V2 first
+    const combo = text.match(/V1\s*\/\s*VR\s*\/\s*V2[\s:]+(\d+)\s*\/\s*(\d+)\s*\/\s*(\d+)/im);
+    const v1 = combo ? combo[1] : vspd([/\bV1[\s:]+(\d{2,4})/im]);
+    const vr = combo ? combo[2] : vspd([/\bVR[\s:]+(\d{2,4})/im]);
+    const v2 = combo ? combo[3] : vspd([/\bV2[\s:]+(\d{2,4})/im]);
+
+    const flex  = find([/FLEX[\s:]+(\S+)/im]);
+    const flaps = find([/FLAPS[\s:]+(\S+)/im]);
+    const trim  = find([/TRIM[\s:]+(\S+)/im]);
+
+    // ── Weights ──
+    const wt = (patterns) => {
+      const v = fuelVal(patterns);
+      return v;
+    };
+    const zfw = wt([/ZFW[\s:]+([0-9][0-9 ]+)/im]);
+    const tow = wt([/TOW[\s:]+([0-9][0-9 ]+)/im]);
+    const ldw = wt([/LDW[\s:]+([0-9][0-9 ]+)/im]);
+
+    // ── Cruise ──
+    const fl    = find([/CRUISE\s+FL(\d{2,3})/im, /\bFL\s*(\d{2,3})\b/im]);
+    const mach  = find([/M\.([\d]{2,3})\b/im]);
+
+    // ── Runway ──
+    const rwy = find([/RWY\s+([0-9]{2}[LRC]?)/im, /RUNWAY[\s:]+([0-9]{2}[LRC]?)/im]);
+
+    return {
+      dep, arr, flightNum, acType, reg,
+      fuel: { block, trip, altn, resrv, cont, taxi, extra },
+      vspeeds: { v1, vr, v2, flex, flaps, trim },
+      weights: { zfw, tow, ldw },
+      cruise: { fl, mach },
+      rwy,
+    };
+  }
+
+  // ─────────────────────────────────────────────
+  //  RENDER ONE CARD
+  // ─────────────────────────────────────────────
+  function renderCard(data, index) {
+    const { dep, arr, flightNum, acType, reg, fuel, vspeeds, weights, cruise, rwy } = data;
+
+    const item = (label, value, cls = '', unit = '') => {
+      const missing = !value;
+      return `<div class="data-item ${cls} ${missing ? 'missing' : ''}">
+        <div class="label">${label}</div>
+        <div class="value">${missing ? '—' : value}<span class="unit">${missing ? '' : unit}</span></div>
+      </div>`;
+    };
+
+    return `
+    <div class="flight-card">
+      <div class="card-header">
+        <div class="card-route">
+          <span class="icao">${dep || '????'}</span>
+          <span class="arrow">→</span>
+          <span class="icao">${arr || '????'}</span>
+        </div>
+        <div class="card-meta">
+          <div class="flight-num">${flightNum || `Vol #${index + 1}`}</div>
+          <div>${acType || ''}${reg ? ' · ' + reg : ''}</div>
+          ${rwy ? `<div>RWY ${rwy}</div>` : ''}
+        </div>
+      </div>
+      <div class="card-body">
+
+        <div class="data-section">
+          <div class="data-section-title">Carburant</div>
+          <div class="data-grid">
+            ${item('Block (total)', fuel.block,  'fuel', 'kg')}
+            ${item('Trip',          fuel.trip,   'fuel', 'kg')}
+            ${item('Altn',          fuel.altn,   'fuel', 'kg')}
+            ${item('Réserve',       fuel.resrv,  'fuel', 'kg')}
+            ${item('Contingence',   fuel.cont,   'fuel', 'kg')}
+            ${item('Taxi',          fuel.taxi,   'fuel', 'kg')}
+            ${item('Extra',         fuel.extra,  'fuel', 'kg')}
+          </div>
+        </div>
+
+        <div class="data-section">
+          <div class="data-section-title">Vitesses décollage</div>
+          <div class="data-grid">
+            ${item('V1',    vspeeds.v1,   'vspd', 'kt')}
+            ${item('VR',    vspeeds.vr,   'vspd', 'kt')}
+            ${item('V2',    vspeeds.v2,   'vspd', 'kt')}
+            ${item('FLEX / TOGA', vspeeds.flex,  'vspd', vspeeds.flex && vspeeds.flex.match(/\d/) ? '°' : '')}
+            ${item('Volets',  vspeeds.flaps, 'vspd')}
+            ${item('Trim',    vspeeds.trim,  'vspd')}
+          </div>
+        </div>
+
+        <div class="data-section">
+          <div class="data-section-title">Masses</div>
+          <div class="data-grid">
+            ${item('ZFW',  weights.zfw, 'weight', 'kg')}
+            ${item('TOW',  weights.tow, 'weight', 'kg')}
+            ${item('LDW',  weights.ldw, 'weight', 'kg')}
+          </div>
+        </div>
+
+        <div class="data-section">
+          <div class="data-section-title">Croisière</div>
+          <div class="data-grid">
+            ${item('FL',   cruise.fl   ? 'FL' + cruise.fl   : null, 'perf')}
+            ${item('Mach', cruise.mach ? 'M.' + cruise.mach : null, 'perf')}
+          </div>
+        </div>
+
+      </div>
+    </div>`;
+  }
+
+  // ─────────────────────────────────────────────
+  //  MAIN PARSE + RENDER
+  // ─────────────────────────────────────────────
+  function parseAll() {
+    const raw = document.getElementById('ofp-input').value.trim();
+    if (!raw) { showToast('Collez d\'abord une feuille OFP.', 'err'); return; }
+
+    const sheets = splitSheets(raw);
+    document.getElementById('count-val').textContent = sheets.length;
+
+    const results = sheets.map(parseSheet);
+    const area = document.getElementById('results-area');
+
+    area.innerHTML = `
+      <div class="results-header">
+        <h2>Résultats <span class="badge">${results.length} vol${results.length > 1 ? 's' : ''}</span></h2>
+      </div>
+      <div class="flights-grid">
+        ${results.map((d, i) => renderCard(d, i)).join('')}
+      </div>`;
+
+    showToast(`${results.length} feuille${results.length > 1 ? 's' : ''} analysée${results.length > 1 ? 's' : ''} avec succès.`, 'ok');
+  }
+
+  function clearAll() {
+    document.getElementById('ofp-input').value = '';
+    document.getElementById('count-val').textContent = '0';
+    document.getElementById('results-area').innerHTML = `
+      <div class="empty-state">
+        <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+          <rect x="12" y="8" width="40" height="48" rx="4" stroke="#64748b" stroke-width="2" fill="none"/>
+          <line x1="20" y1="20" x2="44" y2="20" stroke="#64748b" stroke-width="2"/>
+          <line x1="20" y1="28" x2="44" y2="28" stroke="#64748b" stroke-width="2"/>
+          <line x1="20" y1="36" x2="36" y2="36" stroke="#64748b" stroke-width="2"/>
+        </svg>
+        <h3>Aucune feuille analysée</h3>
+        <p>Collez vos OFP SimBrief ci-dessus et cliquez sur <strong>Analyser</strong>.</p>
+      </div>`;
+  }
+
+  function loadSample() {
+    document.getElementById('ofp-input').value = SAMPLE;
+    const sheets = splitSheets(SAMPLE);
+    document.getElementById('count-val').textContent = sheets.length;
+    showToast('3 exemples de feuilles chargés.', 'ok');
+  }
+
+  // Live count on input
+  document.getElementById('ofp-input').addEventListener('input', () => {
+    const raw = document.getElementById('ofp-input').value.trim();
+    if (!raw) { document.getElementById('count-val').textContent = '0'; return; }
+    document.getElementById('count-val').textContent = splitSheets(raw).length;
+  });
+
+  // ── TOAST ──
+  let toastTimer;
+  function showToast(msg, type = '') {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = 'toast show ' + type;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { el.className = 'toast'; }, 3500);
+  }
+  </script>
+</body>
+</html>
