@@ -147,7 +147,6 @@ h2 { font-size: clamp(1.8rem, 3vw, 2.5rem); color: var(--dark); }
 .logo-img {
   height: 44px;
   width: auto;
-  object-fit: contain;
 }
 
 .nav-links {
@@ -561,7 +560,7 @@ h2 { font-size: clamp(1.8rem, 3vw, 2.5rem); color: var(--dark); }
   gap: 48px;
   padding-bottom: 48px;
 }
-.footer-logo { height: 40px; width: auto; object-fit: contain; margin-bottom: 16px; filter: brightness(0) invert(1); }
+.footer-logo { height: 40px; width: auto; margin-bottom: 16px; }
 .footer-brand p { font-size: .88rem; line-height: 1.7; max-width: 260px; }
 
 .social-links { display: flex; gap: 12px; margin-top: 20px; }
